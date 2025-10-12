@@ -1,5 +1,6 @@
 # package
 .venv/
+.tox/
 __pycache__
 
 # editor
