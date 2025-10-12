@@ -1,4 +1,5 @@
 Django
 djangorestframework
 dj-database-url
+django-mysql
 mysqlclient
