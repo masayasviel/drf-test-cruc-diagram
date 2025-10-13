@@ -2,7 +2,7 @@ import uuid
 
 import factory
 
-from src.myapp import models
+from myapp import models
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -15,7 +15,6 @@ class UserFactory(factory.django.DjangoModelFactory):
 
 class GroupFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: f"group_{n}")
-    code = factory.Sequence(lambda _: uuid.uuid4().hex)
     parent = None
 
     class Meta:

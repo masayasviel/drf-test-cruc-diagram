@@ -6,7 +6,7 @@ import pytest
 @pytest.mark.django_db
 class TestGetCreateUserAPIView:
     def test_get(self):
-        from factories import UserFactory, GroupFactory, GroupUserRelationFactory
+        from .factories import UserFactory, GroupFactory, GroupUserRelationFactory
 
         user1 = UserFactory()
         user2 = UserFactory()
