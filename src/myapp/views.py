@@ -3,20 +3,24 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import User, Group
+from .models import Group, GroupUserRelation
 from .serializers import UserListResponseSerializer
 
 
 class GetCreateUserAPIView(APIView):
     def get(self, request):
-        users = User.objects.prefetch_related(
+        group_with_users = Group.objects.prefetch_related(
             Prefetch(
-                'groupuserrelation__group',
-                queryset=Group.objects.all(),
-                to_attr='groups'
+                'groupuserrelation_set',
+                queryset=GroupUserRelation.objects.select_related('user'),
+                to_attr='relations'
             )
         )
+
+        for g in group_with_users:
+            g.users = [rel.user for rel in g.relations]
+
         return Response(
-            UserListResponseSerializer(users, many=True).data,
+            UserListResponseSerializer(group_with_users, many=True).data,
             status=status.HTTP_200_OK,
         )

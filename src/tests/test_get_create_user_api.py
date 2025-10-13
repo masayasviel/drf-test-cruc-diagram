@@ -21,5 +21,37 @@ class TestGetCreateUserAPIView:
         GroupUserRelationFactory(user=user3, group=group2)
 
         res = APIClient().get('/users')
-        assert res.status == 200
-        assert res.json == []
+        assert res.json() == [
+            {
+                'id': group1.id,
+                'name': group1.name,
+                'users': [
+                    {
+                        'id': user1.id,
+                        'name': user1.name,
+                        'code': user1.code,
+                    },
+                    {
+                        'id': user2.id,
+                        'name': user2.name,
+                        'code': user2.code,
+                    }
+                ]
+            },
+            {
+                'id': group2.id,
+                'name': group2.name,
+                'users': [
+                    {
+                        'id': user2.id,
+                        'name': user2.name,
+                        'code': user2.code,
+                    },
+                    {
+                        'id': user3.id,
+                        'name': user3.name,
+                        'code': user3.code,
+                    }
+                ]
+            },
+        ]
