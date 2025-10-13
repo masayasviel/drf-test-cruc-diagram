@@ -21,11 +21,11 @@ make up
 
 ### migrate
 
-```sh
+```shell
 # create migrate file
-docker-compose run web python manage.py makemigrations myapp
+docker-compose run web python ./src/manage.py makemigrations myapp
 # migrate
-docker-compose run web python manage.py migrate
+docker-compose run web python ./src/manage.py migrate
 ```
 
 ### php my admin
@@ -38,4 +38,11 @@ docker-compose run web python manage.py migrate
 make down
 make down_volume
 docker images -qa | xargs docker rmi
+```
+
+### test
+
+```shell
+# make up後に行う
+docker-compose run web pytest
 ```

@@ -3,3 +3,6 @@ djangorestframework
 dj-database-url
 django-mysql
 mysqlclient
+pytest
+pytest-django
+factory_boy
