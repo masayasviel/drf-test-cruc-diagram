@@ -21,6 +21,7 @@ class TestGetCreateUserAPIView:
         GroupUserRelationFactory(user=user3, group=group2)
 
         res = APIClient().get('/users')
+        assert res.status_code == 200
         assert res.json() == [
             {
                 'id': group1.id,
@@ -55,3 +56,19 @@ class TestGetCreateUserAPIView:
                 ]
             },
         ]
+
+    def test_post(self):
+        from .factories import GroupFactory
+
+        group = GroupFactory()
+
+        res = APIClient().post(
+            '/users',
+            {
+                'name': '名前',
+                'code': 'user_code',
+                'group_id': group.id
+            },
+            format='json'
+        )
+        assert res.status_code == 201

@@ -14,3 +14,9 @@ class UserListResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ('id', 'name', 'users')
+
+
+class UserRegisterRequestSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    code = serializers.CharField()
+    group_id = serializers.IntegerField()
