@@ -2,6 +2,7 @@
 .venv/
 .tox/
 __pycache__
+.DS_STORE
 
 # editor
 .idea/
