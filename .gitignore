@@ -6,3 +6,6 @@ __pycache__
 
 # editor
 .idea/
+
+# test
+tests/docs/*
