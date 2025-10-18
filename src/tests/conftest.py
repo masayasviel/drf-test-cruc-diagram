@@ -1,12 +1,12 @@
 import shutil
 import pathlib
 
-from django.db import connections
+from django.db import connection
 from django.urls import resolve, Resolver404
 from rest_framework.test import APIClient
 import pytest
 
-from .table_operated_tracker import EndpointCrudAggregator, SQLOperatedTracker
+from .query_logger import Aggregator, QueryLogger
 
 HERE = pathlib.Path(__file__).parent
 
@@ -14,25 +14,16 @@ HERE = pathlib.Path(__file__).parent
 @pytest.fixture(scope="session", autouse=True)
 def write_endpoint_reports_after_session(request):
     outdir = HERE / "docs"
-    shutil.rmtree(outdir)
-    aggregator = EndpointCrudAggregator(outdir=outdir)
-    request.config._endpoint_crud_aggregator = aggregator
+    aggregator = Aggregator(outdir=outdir)
+    request.config._aggregator = aggregator
     yield
-    aggregator.write_files()
+    aggregator.write_file()
 
 
 @pytest.fixture(autouse=True)
 def collect_crud_by_endpoint(request, monkeypatch):
-    aggregator: EndpointCrudAggregator = request.config._endpoint_crud_aggregator
-    collector = SQLOperatedTracker()
-
-    # DB execute wrapper
-    exits = []
-    for conn in connections.all():
-        cm = conn.execute_wrapper(collector)
-        cm.__enter__()
-        exits.append(cm)
-
+    aggregator: Aggregator = request.config._aggregator
+    ql = QueryLogger()
     orig_generic = APIClient.generic
 
     def endpoint_key_from(method: str, path: str) -> tuple[str, str]:
@@ -44,7 +35,7 @@ def collect_crud_by_endpoint(request, monkeypatch):
         return (method, path)
 
     def wrapped_generic(self, method, path, *args, **kwargs):
-        collector.reset()  # HTTPごとにSQL集計をクリア
+        ql.reset()
         resp = orig_generic(self, method, path, *args, **kwargs)
         req = getattr(resp, "wsgi_request", None)
         if req and getattr(req, "resolver_match", None):
@@ -52,12 +43,10 @@ def collect_crud_by_endpoint(request, monkeypatch):
             ep_key = (method.upper(), url_name)
         else:
             ep_key = endpoint_key_from(method.upper(), path)
-        aggregator.merge(ep_key, collector)
+        aggregator.merge(ep_key, ql)
         return resp
 
     monkeypatch.setattr(APIClient, "generic", wrapped_generic, raising=True)
 
-    yield
-
-    for cm in exits:
-        cm.__exit__(None, None, None)
+    with connection.execute_wrapper(ql):
+        yield
