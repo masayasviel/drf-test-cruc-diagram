@@ -3,6 +3,8 @@
 .tox/
 __pycache__
 .DS_STORE
+.ruff_cache
+.pytest_cache
 
 # editor
 .idea/
