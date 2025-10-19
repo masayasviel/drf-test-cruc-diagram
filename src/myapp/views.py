@@ -1,11 +1,13 @@
+import unicodedata
+
 from django.db import transaction
 from django.db.models import Prefetch
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Group, GroupUserRelation, User
-from .serializers import UserListResponseSerializer, UserRegisterRequestSerializer
+from .models import Group, GroupUserRelation, User, UserFollowTag
+from .serializers import UserDetailResponseSerializer, UserListResponseSerializer, UserRegisterRequestSerializer
 
 
 class GetCreateUserAPIView(APIView):
@@ -48,3 +50,43 @@ class GetCreateUserAPIView(APIView):
             )
 
         return Response(status=status.HTTP_201_CREATED)
+
+
+class GetUpdateUserAPIView(APIView):
+    def get(self, request, user_code: str):
+        with_tag = unicodedata.normalize(
+            "NFKC",
+            request.query_params.get("with_tag", "false").lower(),
+        ) in ("true", "y", "yes", "1")
+
+        qs = User.objects.prefetch_related(
+            Prefetch(
+                "groupuserrelation_set",
+                queryset=GroupUserRelation.objects.select_related("group"),
+                to_attr="group_user_relation",
+            )
+        )
+
+        if with_tag:
+            qs = qs.prefetch_related(
+                Prefetch(
+                    "userfollowtag_set",
+                    queryset=UserFollowTag.objects.select_related("tag"),
+                    to_attr="user_follow_tag",
+                )
+            )
+
+        user = qs.filter(code=user_code).first()
+
+        if not user:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        user.groups = [rel.group for rel in user.group_user_relation]
+
+        if with_tag:
+            user.tags = [rel.tag for rel in user.user_follow_tag]
+
+        return Response(
+            UserDetailResponseSerializer(user).data,
+            status=status.HTTP_200_OK,
+        )

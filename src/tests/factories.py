@@ -27,3 +27,18 @@ class GroupUserRelationFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.GroupUserRelation
+
+
+class TagFactory(factory.django.DjangoModelFactory):
+    name = factory.Sequence(lambda n: f"tag_{n}")
+
+    class Meta:
+        model = models.Tag
+
+
+class UserFollowTagFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+    tag = factory.SubFactory(TagFactory)
+
+    class Meta:
+        model = models.UserFollowTag

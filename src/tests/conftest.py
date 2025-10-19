@@ -22,7 +22,7 @@ def write_endpoint_reports_after_session(request):
 
 
 @pytest.fixture(autouse=True)
-def collect_crud_by_endpoint(request, monkeypatch):
+def collect_query_by_endpoint(request, monkeypatch):
     aggregator: Aggregator = request.config._aggregator
     ql = QueryLogger()
     orig_generic = APIClient.generic

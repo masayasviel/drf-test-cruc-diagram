@@ -36,9 +36,16 @@ class GroupUserRelation(models.Model):
 
 class Tag(models.Model):
     id = models.AutoField(primary_key=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=256, unique=True)
 
     class Meta:
         db_table = "tag"
+
+
+class UserFollowTag(models.Model):
+    id = models.AutoField(primary_key=True)
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "user_follow_tag"
