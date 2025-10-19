@@ -1,11 +1,13 @@
 from rest_framework import serializers
-from .models import User, Group
+
+from .models import Group, User
+
 
 class UserListResponseSerializer(serializers.ModelSerializer):
     class UserSerializer(serializers.ModelSerializer):
         class Meta:
             model = User
-            fields = ('id', 'name', 'code')
+            fields = ("id", "name", "code")
 
     users = serializers.ListField(
         child=UserSerializer(),
@@ -13,7 +15,7 @@ class UserListResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
-        fields = ('id', 'name', 'users')
+        fields = ("id", "name", "users")
 
 
 class UserRegisterRequestSerializer(serializers.Serializer):

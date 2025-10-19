@@ -2,16 +2,17 @@ from django.db import models
 
 # Create your models here.
 
+
 class Group(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=256, unique=True)
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True)
+    parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['name'], name='group_name_uniq'),
+            models.UniqueConstraint(fields=["name"], name="group_name_uniq"),
         ]
-        db_table = 'group'
+        db_table = "group"
 
 
 class User(models.Model):
@@ -21,7 +22,7 @@ class User(models.Model):
     code = models.CharField(max_length=256, unique=True)
 
     class Meta:
-        db_table = 'user'
+        db_table = "user"
 
 
 class GroupUserRelation(models.Model):
@@ -30,7 +31,7 @@ class GroupUserRelation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'group_user_relation'
+        db_table = "group_user_relation"
 
 
 class Tag(models.Model):
@@ -40,4 +41,4 @@ class Tag(models.Model):
     name = models.CharField(max_length=256, unique=True)
 
     class Meta:
-        db_table = 'tag'
+        db_table = "tag"

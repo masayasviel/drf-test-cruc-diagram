@@ -1,10 +1,10 @@
-import shutil
 import pathlib
+import shutil
 
-from django.db import connection
-from django.urls import resolve, Resolver404
-from rest_framework.test import APIClient
 import pytest
+from django.db import connection
+from django.urls import Resolver404, resolve
+from rest_framework.test import APIClient
 
 from .query_logger import Aggregator, QueryLogger
 
