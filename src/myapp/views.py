@@ -11,7 +11,11 @@ from .serializers import UserListResponseSerializer, UserRegisterRequestSerializ
 class GetCreateUserAPIView(APIView):
     def get(self, request):
         group_with_users = Group.objects.prefetch_related(
-            Prefetch("groupuserrelation_set", queryset=GroupUserRelation.objects.select_related("user"), to_attr="group_user_relation")
+            Prefetch(
+                "groupuserrelation_set",
+                queryset=GroupUserRelation.objects.select_related("user"),
+                to_attr="group_user_relation",
+            )
         )
 
         for g in group_with_users:
@@ -29,7 +33,7 @@ class GetCreateUserAPIView(APIView):
 
         data = serializer.validated_data
         if User.objects.filter(code=data["code"]).first():
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_409_CONFLICT)
 
         group = Group.objects.filter(id=data["group_id"]).first()
         if not group:

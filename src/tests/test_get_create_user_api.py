@@ -61,5 +61,37 @@ class TestGetCreateUserAPIView:
 
         group = GroupFactory()
 
-        res = APIClient().post("/users", {"name": "名前", "code": "user_code", "group_id": group.id}, format="json")
+        res = APIClient().post(
+            "/users",
+            {"name": "名前", "code": "user_code", "group_id": group.id},
+            format="json",
+        )
         assert res.status_code == 201
+
+    def test_post_failed_by_request_invalid(self):
+        res = APIClient().post(
+            "/users",
+            {"name": "名前", "code": "user_code"},
+            format="json",
+        )
+        assert res.status_code == 400
+
+    def test_post_failed_by_duplicate_user_code(self):
+        from .factories import UserFactory
+
+        UserFactory(code="user_code")
+
+        res = APIClient().post(
+            "/users",
+            {"name": "名前", "code": "user_code", "group_id": 1},
+            format="json",
+        )
+        assert res.status_code == 409
+
+    def test_post_failed_by_not_found_group(self):
+        res = APIClient().post(
+            "/users",
+            {"name": "名前", "code": "user_code", "group_id": 1},
+            format="json",
+        )
+        assert res.status_code == 404

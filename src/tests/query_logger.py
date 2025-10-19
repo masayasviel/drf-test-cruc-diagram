@@ -1,16 +1,27 @@
 import json
 import pathlib
 
-import sql_metadata
+import sqlglot
+from django.conf import settings
 from django.urls import URLPattern, URLResolver, get_resolver
+from sqlglot import exp
 
 
 class QueryLogger:
+    EXCLUDED_PREFIXES = ("BEGIN", "SAVEPOINT", "RELEASE SAVEPOINT", "ROLLBACK TO SAVEPOINT", "COMMIT")
+
     def __init__(self):
         self.queries = []
 
     def __call__(self, execute, sql, params, many, context):
-        self.queries.append(sql)
+        if sql.strip().upper().startswith(self.EXCLUDED_PREFIXES):
+            return execute(sql, params, many, context)
+
+        format_query = sql
+        if params:
+            format_query = sql % tuple(repr(p) for p in params)
+        self.queries.append(format_query)
+
         return execute(sql, params, many, context)
 
     def reset(self):
@@ -28,8 +39,8 @@ class Aggregator:
 
     def merge(self, endpoint_key: tuple[str, str], ql: QueryLogger):
         for query in ql.queries:
-            parser = sql_metadata.Parser(query)
-            self.data.setdefault(endpoint_key, set()).update(set(parser.tables))
+            ast = sqlglot.parse_one(query, read=settings.DB_ENGINE)
+            self.data.setdefault(endpoint_key, set()).update({table.name for table in ast.find_all(exp.Table)})
 
     def write_file(self):
         self.outdir.mkdir(parents=True, exist_ok=True)

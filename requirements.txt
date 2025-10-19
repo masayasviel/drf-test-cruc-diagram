@@ -6,4 +6,4 @@ mysqlclient
 pytest
 pytest-django
 factory_boy
-sql-metadata
+sqlglot

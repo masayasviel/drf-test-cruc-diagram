@@ -93,10 +93,11 @@ WSGI_APPLICATION = "myproject.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+DB_ENGINE = "mysql"
 DATABASES = {
     "default": dj_database_url.parse(
         create_db_url(
-            engine="mysql",
+            engine=DB_ENGINE,
             user=os.environ["MYSQL_USER"],
             password=os.environ["MYSQL_PASSWORD"],
             host=os.environ["MYSQL_HOST"],
