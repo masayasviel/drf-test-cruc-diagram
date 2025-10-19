@@ -14,6 +14,7 @@ HERE = pathlib.Path(__file__).parent
 @pytest.fixture(scope="session", autouse=True)
 def write_endpoint_reports_after_session(request):
     outdir = HERE / "docs"
+    shutil.rmtree(outdir)
     aggregator = Aggregator(outdir=outdir)
     request.config._aggregator = aggregator
     yield
