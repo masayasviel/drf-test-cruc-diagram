@@ -1,4 +1,5 @@
 from django.db.models import Prefetch
+from django.db import transaction
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -38,15 +39,16 @@ class GetCreateUserAPIView(APIView):
         if not group:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        user = User.objects.create(
-            name=data['name'],
-            code=data['code']
-        )
+        with transaction.atomic():
+            user = User.objects.create(
+                name=data['name'],
+                code=data['code']
+            )
 
-        GroupUserRelation.objects.create(
-            user=user,
-            group=group,
-        )
+            GroupUserRelation.objects.create(
+                user=user,
+                group=group,
+            )
 
         return Response(status=status.HTTP_201_CREATED)
 
