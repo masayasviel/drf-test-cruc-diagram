@@ -1,0 +1,31 @@
+[
+  {
+    "method": "GET",
+    "url_pattern": "users",
+    "tables": [
+      "group_user_relation",
+      "group",
+      "user"
+    ]
+  },
+  {
+    "method": "GET",
+    "url_pattern": "users/<str:user_code>",
+    "tables": [
+      "group_user_relation",
+      "user_follow_tag",
+      "tag",
+      "group",
+      "user"
+    ]
+  },
+  {
+    "method": "POST",
+    "url_pattern": "users",
+    "tables": [
+      "group_user_relation",
+      "group",
+      "user"
+    ]
+  }
+]
