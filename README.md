@@ -44,5 +44,5 @@ docker images -qa | xargs docker rmi
 
 ```shell
 # make up後に行う
-docker-compose run web pytest -vv
+docker-compose run web tox
 ```
