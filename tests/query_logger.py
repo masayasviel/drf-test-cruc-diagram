@@ -36,10 +36,12 @@ class ExtractTableOperate:
     CRUD_DELETE = "D"
 
     def __init__(self):
-        self.crud_map: dict[str, set[str]] = defaultdict(set)
-        self.cte_names: set[str] = set()
+        self._crud_map: dict[str, set[str]] = defaultdict(set)
+        self._cte_names: set[str] = set()
 
     def extract(self, query: str):
+        self._reset_props()
+
         ast = sqlglot.parse_one(query, read="mysql")
         self._aggregate_cte_names(ast)
 
@@ -52,13 +54,17 @@ class ExtractTableOperate:
         elif isinstance(ast, exp.Select):
             self._handle_select(ast)
 
-        return self.crud_map
+        return self._crud_map
+
+    def _reset_props(self):
+        self._crud_map = defaultdict(set)
+        self._cte_names = set()
 
     def _aggregate_cte_names(self, root_expr: exp.Expression) -> None:
         for with_expr in root_expr.find_all(exp.With):
             for cte in with_expr.expressions:
                 if alias := cte.alias:
-                    self.cte_names.add(alias)
+                    self._cte_names.add(alias)
 
     def _mark_read_tables(
         self,
@@ -69,9 +75,9 @@ class ExtractTableOperate:
             if not name:
                 continue
             # CTE名を除去
-            if name in self.cte_names:
+            if name in self._cte_names:
                 continue
-            self.crud_map[name].add(self.CRUD_READ)
+            self._crud_map[name].add(self.CRUD_READ)
 
     def _handle_select(self, stmt: exp.Select):
         self._mark_read_tables(stmt)
@@ -83,8 +89,8 @@ class ExtractTableOperate:
 
         if isinstance(target, exp.Table):
             name = target.name
-            if name and name not in self.cte_names:
-                self.crud_map[name].add(self.CRUD_CREATE)
+            if name and name not in self._cte_names:
+                self._crud_map[name].add(self.CRUD_CREATE)
 
         # INSERT INTO ... SELECT ... のREAD部分
         if stmt.expression is not None:
@@ -94,8 +100,8 @@ class ExtractTableOperate:
         target = stmt.this
         if isinstance(target, exp.Table):
             name = target.name
-            if name and name not in self.cte_names:
-                self.crud_map[name].add(self.CRUD_UPDATE)
+            if name and name not in self._cte_names:
+                self._crud_map[name].add(self.CRUD_UPDATE)
 
         self._mark_read_tables(stmt)
 
@@ -103,8 +109,8 @@ class ExtractTableOperate:
         target = stmt.this
         if isinstance(target, exp.Table):
             name = target.name
-            if name and name not in self.cte_names:
-                self.crud_map[name].add(self.CRUD_DELETE)
+            if name and name not in self._cte_names:
+                self._crud_map[name].add(self.CRUD_DELETE)
 
         self._mark_read_tables(stmt)
 
