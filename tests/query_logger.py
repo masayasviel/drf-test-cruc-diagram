@@ -1,5 +1,6 @@
 import json
 import pathlib
+from collections import defaultdict
 
 import sqlglot
 from django.conf import settings
@@ -26,6 +27,86 @@ class QueryLogger:
 
     def reset(self):
         self.queries.clear()
+
+
+class ExtractTableOperate:
+    CRUD_CREATE = "C"
+    CRUD_READ = "R"
+    CRUD_UPDATE = "U"
+    CRUD_DELETE = "D"
+
+    def __init__(self):
+        self.crud_map: dict[str, set[str]] = defaultdict(set)
+        self.cte_names: set[str] = set()
+
+    def extract(self, query: str):
+        ast = sqlglot.parse_one(query, read="mysql")
+        self._aggregate_cte_names(ast)
+
+        if isinstance(ast, exp.Insert):
+            self._handle_insert(ast)
+        elif isinstance(ast, exp.Update):
+            self._handle_update(ast)
+        elif isinstance(ast, exp.Delete):
+            self._handle_delete(ast)
+        elif isinstance(ast, exp.Select):
+            self._handle_select(ast)
+
+        return self.crud_map
+
+    def _aggregate_cte_names(self, root_expr: exp.Expression) -> None:
+        for with_expr in root_expr.find_all(exp.With):
+            for cte in with_expr.expressions:
+                if alias := cte.alias:
+                    self.cte_names.add(alias)
+
+    def _mark_read_tables(
+        self,
+        expr: exp.Expression,
+    ):
+        for table in expr.find_all(exp.Table):
+            name = table.name
+            if not name:
+                continue
+            # CTE名を除去
+            if name in self.cte_names:
+                continue
+            self.crud_map[name].add(self.CRUD_READ)
+
+    def _handle_select(self, stmt: exp.Select):
+        self._mark_read_tables(stmt)
+
+    def _handle_insert(self, stmt: exp.Insert):
+        target = stmt.this
+        if isinstance(target, exp.Schema):
+            target = target.this
+
+        if isinstance(target, exp.Table):
+            name = target.name
+            if name and name not in self.cte_names:
+                self.crud_map[name].add(self.CRUD_CREATE)
+
+        # INSERT INTO ... SELECT ... のREAD部分
+        if stmt.expression is not None:
+            self._handle_select(stmt.expression)
+
+    def _handle_update(self, stmt: exp.Update):
+        target = stmt.this
+        if isinstance(target, exp.Table):
+            name = target.name
+            if name and name not in self.cte_names:
+                self.crud_map[name].add(self.CRUD_UPDATE)
+
+        self._mark_read_tables(stmt)
+
+    def _handle_delete(self, stmt: exp.Delete):
+        target = stmt.this
+        if isinstance(target, exp.Table):
+            name = target.name
+            if name and name not in self.cte_names:
+                self.crud_map[name].add(self.CRUD_DELETE)
+
+        self._mark_read_tables(stmt)
 
 
 class Aggregator:

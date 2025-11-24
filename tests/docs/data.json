@@ -3,29 +3,29 @@
     "method": "GET",
     "url_pattern": "users",
     "tables": [
-      "group",
+      "group_user_relation",
       "user",
-      "group_user_relation"
+      "group"
     ]
   },
   {
     "method": "GET",
     "url_pattern": "users/<str:user_code>",
     "tables": [
-      "group",
-      "tag",
-      "user",
+      "group_user_relation",
       "user_follow_tag",
-      "group_user_relation"
+      "tag",
+      "group",
+      "user"
     ]
   },
   {
     "method": "POST",
     "url_pattern": "users",
     "tables": [
-      "group",
+      "group_user_relation",
       "user",
-      "group_user_relation"
+      "group"
     ]
   }
 ]
